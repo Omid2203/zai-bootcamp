@@ -7,7 +7,7 @@ import { Profile, User, Comment, ViewState } from './types';
 import { authService } from './services/authService';
 import { profileService } from './services/profileService';
 import { commentService } from './services/commentService';
-import { ChevronRight, LayoutGrid, Plus, FileText, GraduationCap, Briefcase, Calendar } from 'lucide-react';
+import { ChevronRight, LayoutGrid, Plus, FileText, GraduationCap, Briefcase, Calendar, Mail, Phone } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -149,9 +149,9 @@ export default function App() {
   // --- LOGIN VIEW ---
   if (view === 'LOGIN') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden flex flex-col items-center p-10 text-center relative">
-          <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-2xl flex items-center justify-center text-white font-bold text-3xl mb-6 shadow-lg shadow-blue-200">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl mb-6 shadow-lg shadow-blue-200">
             Z
           </div>
           <h1 className="text-3xl font-extrabold text-gray-900 mb-2">سیستم مدیریت پروفایل</h1>
@@ -252,7 +252,7 @@ export default function App() {
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               {/* Profile Header */}
-              <div className="h-48 bg-gradient-to-r from-blue-600 to-purple-600 relative">
+              <div className="h-48 bg-blue-600 relative">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-10 -mb-10"></div>
 
@@ -300,6 +300,18 @@ export default function App() {
                         <div className="flex items-center gap-2 text-gray-600">
                           <Briefcase className="w-4 h-4 text-purple-500" />
                           <span>{selectedProfile.expertise}</span>
+                        </div>
+                      )}
+                      {selectedProfile.email && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Mail className="w-4 h-4 text-red-500" />
+                          <span dir="ltr">{selectedProfile.email}</span>
+                        </div>
+                      )}
+                      {selectedProfile.phone && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Phone className="w-4 h-4 text-teal-500" />
+                          <span dir="ltr">{selectedProfile.phone}</span>
                         </div>
                       )}
                     </div>

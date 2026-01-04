@@ -11,6 +11,8 @@ interface AdminProfileEditorProps {
 export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile, onSave, onCancel }) => {
   const [formData, setFormData] = useState<Partial<Profile>>({
     name: '',
+    email: '',
+    phone: '',
     age: undefined,
     education: '',
     expertise: '',
@@ -18,7 +20,7 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
     interviewer_opinion: '',
     bio: '',
     skills: [],
-    image_url: `https://picsum.photos/400/400?random=${Math.floor(Math.random() * 1000)}`,
+    image_url: '',
   });
   const [skillsInput, setSkillsInput] = useState('');
   const [saving, setSaving] = useState(false);
@@ -38,6 +40,8 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
 
     const profileData: any = {
       name: formData.name || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
       age: formData.age,
       education: formData.education || '',
       expertise: formData.expertise || '',
@@ -79,6 +83,31 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
               onChange={e => setFormData({...formData, name: e.target.value})}
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ایمیل</label>
+              <input
+                type="email"
+                dir="ltr"
+                placeholder="example@email.com"
+                value={formData.email || ''}
+                onChange={e => setFormData({...formData, email: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">شماره همراه</label>
+              <input
+                type="tel"
+                dir="ltr"
+                placeholder="09123456789"
+                value={formData.phone || ''}
+                onChange={e => setFormData({...formData, phone: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

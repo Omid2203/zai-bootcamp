@@ -19,6 +19,8 @@ export interface Comment {
 export interface Profile {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
   age?: number;
   education?: string;
   expertise?: string;

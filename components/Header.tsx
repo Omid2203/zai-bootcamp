@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
 
         <div className="flex items-center gap-2 cursor-pointer" onClick={onHomeClick}>
-          <div className="w-8 h-8 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
             Z
           </div>
           <span className="font-bold text-xl text-gray-800 hidden sm:block">مدیریت پروفایل</span>

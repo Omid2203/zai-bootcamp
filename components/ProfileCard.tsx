@@ -41,7 +41,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
       )}
 
-      <div className="h-24 bg-gradient-to-r from-blue-500 to-cyan-400 relative">
+      <div className="h-24 bg-blue-500 relative">
         <div className="absolute -bottom-10 right-6 p-1 bg-white rounded-full">
           <img
             src={profile.image_url || 'https://via.placeholder.com/80'}
