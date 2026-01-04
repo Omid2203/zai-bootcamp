@@ -19,29 +19,37 @@ export const authService = {
 
   getCurrentUser: async (): Promise<User | null> => {
     try {
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (authError || !authUser) {
-        console.log('No authenticated user');
+      if (sessionError || !session?.user) {
+        console.log('No session');
         return null;
       }
+
+      const authUser = session.user;
 
       // Get user from our users table
       const { data: userData, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 = no rows found
+      if (error) {
         console.error('Error fetching user:', error);
-        return null;
+        // Return basic user info from auth if users table fails
+        return {
+          id: authUser.id,
+          email: authUser.email || '',
+          name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || '',
+          avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '',
+          is_admin: false
+        };
       }
 
       // If user doesn't exist in our table, create them
       if (!userData) {
-        const newUser: Omit<User, 'is_admin'> & { is_admin: boolean } = {
+        const newUser = {
           id: authUser.id,
           email: authUser.email || '',
           name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || '',
@@ -53,11 +61,12 @@ export const authService = {
           .from('users')
           .insert(newUser)
           .select()
-          .single();
+          .maybeSingle();
 
         if (insertError) {
           console.error('Error creating user:', insertError);
-          return null;
+          // Return basic user even if insert fails
+          return newUser as User;
         }
 
         return insertedUser as User;
