@@ -40,6 +40,7 @@ export const profileService = {
 
     if (error) {
       console.error('Error creating profile:', error);
+      alert('خطا در ایجاد پروفایل: ' + error.message);
       throw error;
     }
 
@@ -47,15 +48,19 @@ export const profileService = {
   },
 
   updateProfile: async (id: string, profile: Partial<Profile>): Promise<Profile | null> => {
+    // Only send fields that exist in the database
+    const { id: _id, created_at, updated_at, ...updateData } = profile as any;
+
     const { data, error } = await supabase
       .from('profiles')
-      .update({ ...profile, updated_at: new Date().toISOString() })
+      .update({ ...updateData, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
 
     if (error) {
       console.error('Error updating profile:', error);
+      alert('خطا در ذخیره: ' + error.message);
       throw error;
     }
 

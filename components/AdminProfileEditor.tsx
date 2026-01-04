@@ -57,8 +57,13 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
       profileData.id = profile.id;
     }
 
-    await onSave(profileData as Profile);
-    setSaving(false);
+    try {
+      await onSave(profileData as Profile);
+    } catch (err) {
+      // Error is already shown in profileService
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
