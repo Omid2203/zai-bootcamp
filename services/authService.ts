@@ -19,60 +19,39 @@ export const authService = {
 
   getCurrentUser: async (): Promise<User | null> => {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (sessionError || !session?.user) {
-        console.log('No session');
+      if (!session?.user) {
         return null;
       }
 
       const authUser = session.user;
 
-      // Get user from our users table
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .maybeSingle();
+      // First, return basic user from auth data
+      const basicUser: User = {
+        id: authUser.id,
+        email: authUser.email || '',
+        name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || '',
+        avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '',
+        is_admin: false
+      };
 
-      if (error) {
-        console.error('Error fetching user:', error);
-        // Return basic user info from auth if users table fails
-        return {
-          id: authUser.id,
-          email: authUser.email || '',
-          name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || '',
-          avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '',
-          is_admin: false
-        };
-      }
-
-      // If user doesn't exist in our table, create them
-      if (!userData) {
-        const newUser = {
-          id: authUser.id,
-          email: authUser.email || '',
-          name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || '',
-          avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '',
-          is_admin: false
-        };
-
-        const { data: insertedUser, error: insertError } = await supabase
+      // Try to get is_admin from users table (don't wait too long)
+      try {
+        const { data: userData } = await supabase
           .from('users')
-          .insert(newUser)
-          .select()
+          .select('is_admin')
+          .eq('id', authUser.id)
           .maybeSingle();
 
-        if (insertError) {
-          console.error('Error creating user:', insertError);
-          // Return basic user even if insert fails
-          return newUser as User;
+        if (userData?.is_admin) {
+          basicUser.is_admin = true;
         }
-
-        return insertedUser as User;
+      } catch (e) {
+        // Ignore errors, just use basicUser
       }
 
-      return userData as User;
+      return basicUser;
     } catch (error) {
       console.error('Error in getCurrentUser:', error);
       return null;
