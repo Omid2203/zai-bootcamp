@@ -26,67 +26,100 @@ export default function App() {
   const [showAdminEditor, setShowAdminEditor] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
 
+  // Auto-timeout for loading state
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const timeout = setTimeout(() => {
+      console.log('Loading timeout - resetting state');
+      setIsLoading(false);
+      setLoadingMessage('');
+      // Clear hash from URL if stuck
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }, 15000); // 15 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
+
   // Initialize App
   useEffect(() => {
+    let isMounted = true;
+
     const init = async () => {
       try {
-        // If returning from OAuth, show loading
+        // If returning from OAuth, show loading and let onAuthStateChange handle it
         const hasToken = window.location.hash.includes('access_token');
         if (hasToken) {
           setIsLoading(true);
           setLoadingMessage('در حال ورود به سیستم...');
+          // Don't call getSession here - let onAuthStateChange handle the token
+          // Supabase will automatically process the hash
+          return;
         }
 
+        // Only check session if no token in URL
         const user = await authService.getCurrentUser();
 
-        if (user) {
+        if (user && isMounted) {
           setCurrentUser(user);
           setView('LIST');
           setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
-          // Load profiles
           const loadedProfiles = await profileService.getProfiles();
-          setProfiles(loadedProfiles);
-          // Clear hash from URL
-          if (window.location.hash) {
-            window.history.replaceState(null, '', window.location.pathname);
+          if (isMounted) {
+            setProfiles(loadedProfiles);
           }
         }
-        // If no user, stay on LOGIN view (default)
       } catch (error) {
         console.error('Init error:', error);
-        // Stay on LOGIN view
       } finally {
-        setIsLoading(false);
-        setLoadingMessage('');
+        if (isMounted && !window.location.hash.includes('access_token')) {
+          setIsLoading(false);
+          setLoadingMessage('');
+        }
       }
     };
 
-    init();
-
-    // Listen for auth changes
+    // Listen for auth changes FIRST (before init)
     const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
+      if (!isMounted) return;
+
       if (user) {
-        setIsLoading(true);
-        setLoadingMessage('در حال بارگذاری...');
         setCurrentUser(user);
         setView('LIST');
+        setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
+
+        // Clear hash from URL
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+
         try {
           const loadedProfiles = await profileService.getProfiles();
-          setProfiles(loadedProfiles);
+          if (isMounted) {
+            setProfiles(loadedProfiles);
+          }
         } catch (e) {
           console.error('Error loading profiles:', e);
         } finally {
-          setIsLoading(false);
-          setLoadingMessage('');
+          if (isMounted) {
+            setIsLoading(false);
+            setLoadingMessage('');
+          }
         }
       } else {
         setCurrentUser(null);
         setView('LOGIN');
         setIsLoading(false);
+        setLoadingMessage('');
       }
     });
 
+    init();
+
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

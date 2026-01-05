@@ -77,7 +77,18 @@ export const authService = {
   },
 
   onAuthStateChange: (callback: (user: User | null) => void) => {
+    // First, check if there's a hash with access_token and process it
+    if (window.location.hash.includes('access_token')) {
+      // Extract the hash and let Supabase process it
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          authService.getCurrentUser().then(callback);
+        }
+      });
+    }
+
     return supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
       if (session?.user) {
         const user = await authService.getCurrentUser();
         callback(user);
