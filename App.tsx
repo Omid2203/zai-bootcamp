@@ -24,36 +24,28 @@ export default function App() {
 
   // Initialize App
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
     const init = async () => {
       try {
-        // Check auth
+        setIsLoading(true);
         const user = await authService.getCurrentUser();
+
         if (user) {
           setCurrentUser(user);
           setView('LIST');
-          // Load profiles
+          setIsLoading(false);
+          // Load profiles in background
           const loadedProfiles = await profileService.getProfiles();
           setProfiles(loadedProfiles);
         } else {
           setView('LOGIN');
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Init error:', error);
         setView('LOGIN');
-      } finally {
         setIsLoading(false);
-        clearTimeout(timeoutId);
       }
     };
-
-    // Safety timeout - if init takes more than 2 seconds, force to login
-    timeoutId = setTimeout(() => {
-      console.warn('Init timeout - forcing to login view');
-      setIsLoading(false);
-      setView('LOGIN');
-    }, 2000);
 
     init();
 
@@ -71,7 +63,6 @@ export default function App() {
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -160,7 +151,7 @@ export default function App() {
     p.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (isLoading && view === 'LOGIN' && !currentUser) {
+  if (isLoading) {
     return <div className="h-screen flex items-center justify-center text-blue-600">در حال بارگذاری...</div>;
   }
 
