@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Profile } from '../types';
-import { X, Save, Loader2 } from 'lucide-react';
+import { X, Save, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
+import { storageService } from '../services/storageService';
 
 interface AdminProfileEditorProps {
   profile?: Profile | null;
@@ -24,43 +25,71 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
   });
   const [skillsInput, setSkillsInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => {
     if (profile) {
       setFormData(profile);
       setSkillsInput(profile.skills.join(', '));
+      setPreviewUrl(profile.image_url || '');
     }
   }, [profile]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
-    const skillsArray = skillsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
-
-    const profileData: any = {
-      name: formData.name || '',
-      email: formData.email || '',
-      phone: formData.phone || '',
-      age: formData.age,
-      education: formData.education || '',
-      expertise: formData.expertise || '',
-      resume_link: formData.resume_link || '',
-      interviewer_opinion: formData.interviewer_opinion || '',
-      bio: formData.bio || '',
-      skills: skillsArray,
-      image_url: formData.image_url || '',
-    };
-
-    // Only include id if editing existing profile
-    if (profile?.id) {
-      profileData.id = profile.id;
-    }
-
     try {
+      let imageUrl = formData.image_url || '';
+
+      // Upload image if a new file is selected
+      if (selectedFile) {
+        const tempId = profile?.id || `temp-${Date.now()}`;
+        const uploadedUrl = await storageService.uploadProfileImage(selectedFile, tempId);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+
+      const skillsArray = skillsInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+      const profileData: any = {
+        name: formData.name || '',
+        email: formData.email || '',
+        phone: formData.phone || '',
+        age: formData.age,
+        education: formData.education || '',
+        expertise: formData.expertise || '',
+        resume_link: formData.resume_link || '',
+        interviewer_opinion: formData.interviewer_opinion || '',
+        bio: formData.bio || '',
+        skills: skillsArray,
+        image_url: imageUrl,
+      };
+
+      // Only include id if editing existing profile
+      if (profile?.id) {
+        profileData.id = profile.id;
+      }
+
       await onSave(profileData as Profile);
     } catch (err) {
       // Error is already shown in profileService
+      console.error('Error saving profile:', err);
     } finally {
       setSaving(false);
     }
@@ -163,17 +192,43 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">آدرس تصویر (URL)</label>
-            <input
-              type="text"
-              dir="ltr"
-              value={formData.image_url || ''}
-              onChange={e => setFormData({...formData, image_url: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-mono"
-            />
-            {formData.image_url && (
-              <img src={formData.image_url} alt="Preview" className="mt-2 w-12 h-12 rounded-full object-cover border" />
-            )}
+            <label className="block text-sm font-medium text-gray-700 mb-2">تصویر پروفایل</label>
+            <div className="flex items-start gap-4">
+              {/* Preview */}
+              <div className="flex-shrink-0">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" className="w-24 h-24 rounded-xl object-cover border-2 border-gray-200" />
+                ) : (
+                  <div className="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center border-2 border-gray-200">
+                    <ImageIcon className="w-10 h-10 text-gray-400" />
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Button */}
+              <div className="flex-1">
+                <label className="cursor-pointer block">
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-blue-500 hover:bg-blue-50/50 transition-colors">
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <Upload className="w-6 h-6 text-gray-400" />
+                      <div className="text-sm text-gray-600">
+                        <span className="text-blue-600 font-medium">انتخاب تصویر</span>
+                        <p className="text-xs text-gray-500 mt-1">PNG, JPG (حداکثر 5MB)</p>
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+                {selectedFile && (
+                  <p className="text-xs text-green-600 mt-2">✓ {selectedFile.name}</p>
+                )}
+              </div>
+            </div>
           </div>
 
           <div>
