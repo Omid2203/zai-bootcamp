@@ -10,13 +10,17 @@ import { commentService } from './services/commentService';
 import { ChevronRight, LayoutGrid, Plus, FileText, GraduationCap, Briefcase, Calendar, Mail, Phone } from 'lucide-react';
 
 export default function App() {
+  // Check if returning from OAuth (token in URL hash)
+  const initialHasToken = typeof window !== 'undefined' && window.location.hash.includes('access_token');
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [view, setView] = useState<ViewState>('LOGIN');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(initialHasToken);
+  const [loadingMessage, setLoadingMessage] = useState(initialHasToken ? 'در حال ورود به سیستم...' : '');
 
   // Admin States
   const [showAdminEditor, setShowAdminEditor] = useState(false);
@@ -26,19 +30,34 @@ export default function App() {
   useEffect(() => {
     const init = async () => {
       try {
+        // If returning from OAuth, show loading
+        const hasToken = window.location.hash.includes('access_token');
+        if (hasToken) {
+          setIsLoading(true);
+          setLoadingMessage('در حال ورود به سیستم...');
+        }
+
         const user = await authService.getCurrentUser();
 
         if (user) {
           setCurrentUser(user);
           setView('LIST');
-          // Load profiles in background
+          setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
+          // Load profiles
           const loadedProfiles = await profileService.getProfiles();
           setProfiles(loadedProfiles);
+          // Clear hash from URL
+          if (window.location.hash) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
         }
         // If no user, stay on LOGIN view (default)
       } catch (error) {
         console.error('Init error:', error);
         // Stay on LOGIN view
+      } finally {
+        setIsLoading(false);
+        setLoadingMessage('');
       }
     };
 
@@ -46,13 +65,24 @@ export default function App() {
 
     // Listen for auth changes
     const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
-      setCurrentUser(user);
       if (user) {
+        setIsLoading(true);
+        setLoadingMessage('در حال بارگذاری...');
+        setCurrentUser(user);
         setView('LIST');
-        const loadedProfiles = await profileService.getProfiles();
-        setProfiles(loadedProfiles);
+        try {
+          const loadedProfiles = await profileService.getProfiles();
+          setProfiles(loadedProfiles);
+        } catch (e) {
+          console.error('Error loading profiles:', e);
+        } finally {
+          setIsLoading(false);
+          setLoadingMessage('');
+        }
       } else {
+        setCurrentUser(null);
         setView('LOGIN');
+        setIsLoading(false);
       }
     });
 
@@ -64,12 +94,14 @@ export default function App() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
+      setLoadingMessage('در حال اتصال به گوگل...');
       await authService.signInWithGoogle();
+      // Note: This won't reach here as signInWithGoogle redirects
     } catch (e) {
       console.error(e);
       alert('خطا در احراز هویت با گوگل');
-    } finally {
       setIsLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -147,7 +179,25 @@ export default function App() {
   );
 
   if (isLoading) {
-    return <div className="h-screen flex items-center justify-center text-blue-600">در حال بارگذاری...</div>;
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-100">
+        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 max-w-sm">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-700 font-medium">{loadingMessage || 'در حال بارگذاری...'}</p>
+          <p className="text-gray-400 text-sm">لطفاً صبر کنید</p>
+          <button
+            onClick={() => {
+              setIsLoading(false);
+              setLoadingMessage('');
+              window.history.replaceState(null, '', window.location.pathname);
+            }}
+            className="mt-4 text-sm text-blue-600 hover:underline"
+          >
+            بازگشت به صفحه ورود
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // --- LOGIN VIEW ---
