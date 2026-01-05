@@ -36,19 +36,26 @@ export const authService = {
         is_admin: false
       };
 
-      // Try to get is_admin from users table (don't wait too long)
+      // Try to get is_admin from users table with timeout
       try {
-        const { data: userData } = await supabase
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 3000)
+        );
+
+        const queryPromise = supabase
           .from('users')
           .select('is_admin')
           .eq('id', authUser.id)
-          .maybeSingle();
+          .single();
+
+        const { data: userData } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
         if (userData?.is_admin) {
           basicUser.is_admin = true;
         }
       } catch (e) {
-        // Ignore errors, just use basicUser
+        // Ignore errors or timeout, just use basicUser
+        console.log('Could not fetch is_admin, using default:', e);
       }
 
       return basicUser;
