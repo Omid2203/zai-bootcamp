@@ -49,17 +49,35 @@ export default function App() {
 
     const init = async () => {
       try {
-        // If returning from OAuth, show loading and let onAuthStateChange handle it
         const hasToken = window.location.hash.includes('access_token');
+
+        // If returning from OAuth, process the token manually
         if (hasToken) {
           setIsLoading(true);
           setLoadingMessage('در حال ورود به سیستم...');
-          // Don't call getSession here - let onAuthStateChange handle the token
-          // Supabase will automatically process the hash
-          return;
+
+          console.log('Found OAuth token in URL, processing...');
+          const user = await authService.processOAuthCallback();
+
+          if (user && isMounted) {
+            console.log('OAuth login successful:', user.email);
+            setCurrentUser(user);
+            setView('LIST');
+            setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
+
+            const loadedProfiles = await profileService.getProfiles();
+            if (isMounted) {
+              setProfiles(loadedProfiles);
+              setIsLoading(false);
+              setLoadingMessage('');
+            }
+            return;
+          } else {
+            console.log('OAuth processing failed, falling back to getSession');
+          }
         }
 
-        // Only check session if no token in URL
+        // Check existing session
         const user = await authService.getCurrentUser();
 
         if (user && isMounted) {
@@ -74,21 +92,20 @@ export default function App() {
       } catch (error) {
         console.error('Init error:', error);
       } finally {
-        if (isMounted && !window.location.hash.includes('access_token')) {
+        if (isMounted) {
           setIsLoading(false);
           setLoadingMessage('');
         }
       }
     };
 
-    // Listen for auth changes FIRST (before init)
+    // Listen for auth changes
     const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
       if (!isMounted) return;
 
       if (user) {
         setCurrentUser(user);
         setView('LIST');
-        setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
 
         // Clear hash from URL
         if (window.location.hash) {
@@ -96,6 +113,7 @@ export default function App() {
         }
 
         try {
+          setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
           const loadedProfiles = await profileService.getProfiles();
           if (isMounted) {
             setProfiles(loadedProfiles);

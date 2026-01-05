@@ -11,7 +11,55 @@ const withTimeout = <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
   ]);
 };
 
+// Parse hash params from URL
+const parseHashParams = (): Record<string, string> => {
+  const hash = window.location.hash.substring(1);
+  const params: Record<string, string> = {};
+  hash.split('&').forEach(part => {
+    const [key, value] = part.split('=');
+    if (key && value) {
+      params[key] = decodeURIComponent(value);
+    }
+  });
+  return params;
+};
+
 export const authService = {
+  // Process OAuth callback from URL hash
+  processOAuthCallback: async (): Promise<User | null> => {
+    const params = parseHashParams();
+
+    if (!params.access_token) {
+      return null;
+    }
+
+    console.log('Processing OAuth callback with token');
+
+    try {
+      // Set the session manually using the tokens from URL
+      const { data, error } = await supabase.auth.setSession({
+        access_token: params.access_token,
+        refresh_token: params.refresh_token || '',
+      });
+
+      if (error) {
+        console.error('Error setting session:', error);
+        return null;
+      }
+
+      if (data.user) {
+        // Clear hash from URL
+        window.history.replaceState(null, '', window.location.pathname);
+        return authService.getCurrentUser();
+      }
+
+      return null;
+    } catch (e) {
+      console.error('Error processing OAuth callback:', e);
+      return null;
+    }
+  },
+
   signInWithGoogle: async (): Promise<void> => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -77,16 +125,6 @@ export const authService = {
   },
 
   onAuthStateChange: (callback: (user: User | null) => void) => {
-    // First, check if there's a hash with access_token and process it
-    if (window.location.hash.includes('access_token')) {
-      // Extract the hash and let Supabase process it
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          authService.getCurrentUser().then(callback);
-        }
-      });
-    }
-
     return supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
       if (session?.user) {
