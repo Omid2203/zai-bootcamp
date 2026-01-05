@@ -1,6 +1,16 @@
 import { supabase } from './supabase';
 import { User } from '../types';
 
+// Helper function to add timeout to promises
+const withTimeout = <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+    )
+  ]);
+};
+
 export const authService = {
   signInWithGoogle: async (): Promise<void> => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -19,7 +29,11 @@ export const authService = {
 
   getCurrentUser: async (): Promise<User | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Add 10 second timeout for getSession
+      const { data: { session } } = await withTimeout(
+        supabase.auth.getSession(),
+        10000
+      );
 
       if (!session?.user) {
         return null;
@@ -36,19 +50,22 @@ export const authService = {
         is_admin: false
       };
 
-      // Try to get is_admin from users table
+      // Try to get is_admin from users table (with 5 second timeout)
       try {
-        const { data: userData, error } = await supabase
-          .from('users')
-          .select('is_admin')
-          .eq('id', authUser.id)
-          .maybeSingle();
+        const { data: userData, error } = await withTimeout(
+          supabase
+            .from('users')
+            .select('is_admin')
+            .eq('id', authUser.id)
+            .maybeSingle(),
+          5000
+        );
 
         if (!error && userData?.is_admin) {
           basicUser.is_admin = true;
         }
       } catch (e) {
-        // Ignore errors, just use basicUser
+        // Ignore errors (including timeout), just use basicUser
         console.log('Could not fetch is_admin, using default');
       }
 
