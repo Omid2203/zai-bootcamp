@@ -24,20 +24,37 @@ export default function App() {
 
   // Initialize App
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const init = async () => {
-      // Check auth
-      const user = await authService.getCurrentUser();
-      if (user) {
-        setCurrentUser(user);
-        setView('LIST');
-        // Load profiles
-        const loadedProfiles = await profileService.getProfiles();
-        setProfiles(loadedProfiles);
-      } else {
+      try {
+        // Check auth
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
+          setView('LIST');
+          // Load profiles
+          const loadedProfiles = await profileService.getProfiles();
+          setProfiles(loadedProfiles);
+        } else {
+          setView('LOGIN');
+        }
+      } catch (error) {
+        console.error('Init error:', error);
         setView('LOGIN');
+      } finally {
+        setIsLoading(false);
+        clearTimeout(timeoutId);
       }
-      setIsLoading(false);
     };
+
+    // Safety timeout - if init takes more than 5 seconds, force to login
+    timeoutId = setTimeout(() => {
+      console.warn('Init timeout - forcing to login view');
+      setIsLoading(false);
+      setView('LOGIN');
+    }, 5000);
+
     init();
 
     // Listen for auth changes
@@ -54,6 +71,7 @@ export default function App() {
 
     return () => {
       subscription.unsubscribe();
+      clearTimeout(timeoutId);
     };
   }, []);
 
