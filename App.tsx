@@ -16,7 +16,7 @@ export default function App() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Admin States
   const [showAdminEditor, setShowAdminEditor] = useState(false);
@@ -26,24 +26,19 @@ export default function App() {
   useEffect(() => {
     const init = async () => {
       try {
-        setIsLoading(true);
         const user = await authService.getCurrentUser();
 
         if (user) {
           setCurrentUser(user);
           setView('LIST');
-          setIsLoading(false);
           // Load profiles in background
           const loadedProfiles = await profileService.getProfiles();
           setProfiles(loadedProfiles);
-        } else {
-          setView('LOGIN');
-          setIsLoading(false);
         }
+        // If no user, stay on LOGIN view (default)
       } catch (error) {
         console.error('Init error:', error);
-        setView('LOGIN');
-        setIsLoading(false);
+        // Stay on LOGIN view
       }
     };
 
