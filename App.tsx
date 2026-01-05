@@ -48,12 +48,12 @@ export default function App() {
       }
     };
 
-    // Safety timeout - if init takes more than 5 seconds, force to login
+    // Safety timeout - if init takes more than 2 seconds, force to login
     timeoutId = setTimeout(() => {
       console.warn('Init timeout - forcing to login view');
       setIsLoading(false);
       setView('LOGIN');
-    }, 5000);
+    }, 2000);
 
     init();
 
