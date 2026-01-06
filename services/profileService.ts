@@ -77,5 +77,22 @@ export const profileService = {
       console.error('Error deleting profile:', error);
       throw error;
     }
+  },
+
+  toggleProfileStatus: async (id: string, isActive: boolean): Promise<Profile | null> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error toggling profile status:', error);
+      alert('خطا در تغییر وضعیت');
+      return null;
+    }
+
+    return data as Profile;
   }
 };

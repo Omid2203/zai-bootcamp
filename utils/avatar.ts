@@ -1,0 +1,30 @@
+// Persian female names (common first names)
+const femaleNames = [
+  'نازنین', 'امینه', 'پارمیس', 'پانته', 'پانته‌آ', 'سارا', 'مریم', 'زهرا', 'فاطمه',
+  'نرگس', 'مینا', 'نیلوفر', 'شیما', 'شیوا', 'پریسا', 'پرستو', 'آیدا', 'الهام',
+  'مهسا', 'مهناز', 'مهشید', 'نگار', 'نگین', 'یاسمن', 'یاسمین', 'ریحانه', 'سحر',
+  'شقایق', 'غزل', 'لیلا', 'مونا', 'هانیه', 'هستی', 'کیمیا', 'آتنا', 'آرزو',
+  'بهاره', 'بهناز', 'پگاه', 'ترانه', 'درسا', 'دنیا', 'رها', 'روژان', 'زینب',
+  'ساناز', 'سمیرا', 'سمیه', 'شبنم', 'شیرین', 'صبا', 'طناز', 'عسل', 'فرناز',
+  'فریبا', 'کتایون', 'گلناز', 'ملیکا', 'ندا', 'نسترن', 'نسرین', 'نیکی', 'هدیه'
+];
+
+// Check if name is female based on first name
+const isFemale = (fullName: string): boolean => {
+  const firstName = fullName.split(' ')[0];
+  return femaleNames.some(name => firstName.includes(name) || name.includes(firstName));
+};
+
+// Get avatar URL based on name and gender (using DiceBear)
+export const getAvatarUrl = (name: string): string => {
+  const female = isFemale(name);
+  const seed = encodeURIComponent(name);
+
+  if (female) {
+    // Female: lorelei style (elegant feminine avatars)
+    return `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`;
+  } else {
+    // Male: micah style (clean, gender-neutral but works well for males)
+    return `https://api.dicebear.com/7.x/micah/svg?seed=${seed}`;
+  }
+};

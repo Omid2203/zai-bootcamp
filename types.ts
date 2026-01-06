@@ -29,8 +29,19 @@ export interface Profile {
   skills: string[];
   bio?: string;
   image_url?: string;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface TouchPoint {
+  id: string;
+  profile_id: string;
+  author_id: string;
+  author_name: string;
+  author_avatar?: string;
+  content: string;
+  created_at: string;
 }
 
 export type ViewState = 'LOGIN' | 'LIST' | 'PROFILE_DETAIL';

@@ -1,6 +1,12 @@
 import React from 'react';
-import { Profile } from '../types';
-import { Pencil, Trash2, GraduationCap, Briefcase, Calendar } from 'lucide-react';
+import { Profile, TouchPoint } from '../types';
+import { Pencil, Trash2, GraduationCap, Calendar, MessageSquare } from 'lucide-react';
+import { getAvatarUrl } from '../utils/avatar';
+import { Card } from './ui/card';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarImage } from './ui/avatar';
+import { Button } from './ui/button';
+import { Switch } from './ui/switch';
 
 interface ProfileCardProps {
   profile: Profile;
@@ -8,6 +14,8 @@ interface ProfileCardProps {
   isAdmin?: boolean;
   onEdit?: (e: React.MouseEvent, profile: Profile) => void;
   onDelete?: (e: React.MouseEvent, profile: Profile) => void;
+  onToggleStatus?: (e: React.MouseEvent, profile: Profile) => void;
+  latestTouchPoint?: TouchPoint | null;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -15,52 +23,79 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   onClick,
   isAdmin,
   onEdit,
-  onDelete
+  onDelete,
+  onToggleStatus,
+  latestTouchPoint
 }) => {
+  const isActive = profile.is_active !== false; // default to true
+
   return (
-    <div
+    <Card
       onClick={() => onClick(profile)}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden group relative"
+      className="rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden group relative border-border"
     >
+      {/* Admin Controls */}
       {isAdmin && (
         <div className="absolute top-2 left-2 z-10 flex gap-2">
-          <button
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleStatus && onToggleStatus(e, profile);
+            }}
+            className="flex items-center gap-1 bg-white/90 backdrop-blur rounded-full shadow-sm border px-2 py-1"
+          >
+            <Switch
+              checked={isActive}
+              onCheckedChange={() => {}}
+              className="h-4 w-7 data-[state=checked]:bg-green-600"
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={(e) => onEdit && onEdit(e, profile)}
-            className="p-2 bg-white/90 backdrop-blur rounded-full text-blue-600 hover:bg-blue-50 shadow-sm border border-gray-200 transition-colors"
+            className="bg-white/90 backdrop-blur rounded-full shadow-sm border h-8 w-8 hover:bg-blue-50"
             title="ویرایش"
           >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
+            <Pencil className="w-4 h-4 text-blue-600" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={(e) => onDelete && onDelete(e, profile)}
-            className="p-2 bg-white/90 backdrop-blur rounded-full text-red-600 hover:bg-red-50 shadow-sm border border-gray-200 transition-colors"
+            className="bg-white/90 backdrop-blur rounded-full shadow-sm border h-8 w-8 hover:bg-destructive/10"
             title="حذف"
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <Trash2 className="w-4 h-4 text-destructive" />
+          </Button>
         </div>
       )}
 
+      {/* Status Badge */}
+      <div className="absolute top-2 right-2 z-10">
+        <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}>
+          {isActive ? 'فعال' : 'غیرفعال'}
+        </Badge>
+      </div>
+
       <div className="h-24 bg-blue-500 relative">
         <div className="absolute -bottom-10 right-6 p-1 bg-white rounded-full">
-          <img
-            src={profile.image_url || 'https://via.placeholder.com/80'}
-            alt={profile.name}
-            className="w-20 h-20 rounded-full object-cover border-2 border-white"
-          />
+          <Avatar className="w-20 h-20 border-2 border-white">
+            <AvatarImage src={getAvatarUrl(profile.name)} alt={profile.name} />
+          </Avatar>
         </div>
       </div>
 
       <div className="pt-12 px-6 pb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+            <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors">
               {profile.name}
             </h3>
             {profile.expertise && (
-              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 bg-purple-100 text-purple-700">
+              <Badge variant="outline" className="mt-1 bg-purple-100 text-purple-700 border-purple-200">
                 {profile.expertise}
-              </span>
+              </Badge>
             )}
           </div>
         </div>
@@ -81,19 +116,31 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           )}
         </div>
 
+        {/* Latest Touch Point */}
+        {latestTouchPoint && (
+          <div className="mt-3 p-2 bg-amber-50 rounded-lg border border-amber-100">
+            <div className="flex items-start gap-2">
+              <MessageSquare className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-gray-600 line-clamp-2 leading-5">
+                {latestTouchPoint.content}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 flex flex-wrap gap-2">
           {profile.skills.slice(0, 3).map(skill => (
-            <span key={skill} className="text-xs bg-gray-50 text-gray-600 px-2 py-1 rounded border border-gray-100">
+            <Badge key={skill} variant="secondary" className="text-xs">
               {skill}
-            </span>
+            </Badge>
           ))}
           {profile.skills.length > 3 && (
-            <span className="text-xs text-gray-400 px-2 py-1">
+            <span className="text-xs text-muted-foreground px-2 py-1">
               +{profile.skills.length - 3}
             </span>
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 };

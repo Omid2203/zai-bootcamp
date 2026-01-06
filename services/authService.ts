@@ -11,60 +11,68 @@ const withTimeout = <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
   ]);
 };
 
-// Parse hash params from URL
-const parseHashParams = (): Record<string, string> => {
-  const hash = window.location.hash.substring(1);
-  const params: Record<string, string> = {};
-  hash.split('&').forEach(part => {
-    const [key, value] = part.split('=');
-    if (key && value) {
-      params[key] = decodeURIComponent(value);
-    }
-  });
-  return params;
+// Detect OAuth params returned from Supabase/Google (PKCE flow uses code param)
+const hasOAuthParams = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.has('code');
+};
+
+// Remove OAuth params from URL once we've processed them
+const clearOAuthParams = () => {
+  if (typeof window === 'undefined') return;
+  if (window.location.hash || window.location.search) {
+    window.history.replaceState(null, '', window.location.pathname);
+  }
 };
 
 export const authService = {
-  // Process OAuth callback from URL hash
+  hasOAuthParams,
+
+  // Process OAuth callback from URL (PKCE flow)
   processOAuthCallback: async (): Promise<User | null> => {
-    const params = parseHashParams();
-
-    if (!params.access_token) {
-      return null;
-    }
-
-    console.log('Processing OAuth callback with token');
+    if (!hasOAuthParams()) return null;
 
     try {
-      // Set the session manually using the tokens from URL
-      const { data, error } = await supabase.auth.setSession({
-        access_token: params.access_token,
-        refresh_token: params.refresh_token || '',
-      });
+      console.log('Processing OAuth callback from URL...');
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
 
-      if (error) {
-        console.error('Error setting session:', error);
+      if (!code) {
+        console.log('No code found in URL');
+        clearOAuthParams();
         return null;
       }
 
-      if (data.user) {
-        // Clear hash from URL
-        window.history.replaceState(null, '', window.location.pathname);
+      // Exchange code for session (PKCE flow)
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error) {
+        console.error('Error exchanging code for session:', error);
+        clearOAuthParams();
+        return null;
+      }
+
+      clearOAuthParams();
+
+      if (data.session?.user) {
         return authService.getCurrentUser();
       }
 
       return null;
     } catch (e) {
       console.error('Error processing OAuth callback:', e);
+      clearOAuthParams();
       return null;
     }
   },
 
   signInWithGoogle: async (): Promise<void> => {
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo
       }
     });
     if (error) throw error;
@@ -89,7 +97,7 @@ export const authService = {
 
       const authUser = session.user;
 
-      // First, return basic user from auth data
+      // Default user from Google auth data
       const basicUser: User = {
         id: authUser.id,
         email: authUser.email || '',
@@ -98,23 +106,34 @@ export const authService = {
         is_admin: false
       };
 
-      // Try to get is_admin from users table (with 5 second timeout)
+      // Try to get user data from users table (name, avatar_url, is_admin)
+      // If name is set in DB, use it instead of Google name
       try {
         const { data: userData, error } = await withTimeout(
           supabase
             .from('users')
-            .select('is_admin')
+            .select('name, avatar_url, is_admin')
             .eq('id', authUser.id)
             .maybeSingle(),
           5000
         );
 
-        if (!error && userData?.is_admin) {
-          basicUser.is_admin = true;
+        if (!error && userData) {
+          // Use DB name if set, otherwise keep Google name
+          if (userData.name) {
+            basicUser.name = userData.name;
+          }
+          // Use DB avatar if set, otherwise keep Google avatar
+          if (userData.avatar_url) {
+            basicUser.avatar_url = userData.avatar_url;
+          }
+          if (userData.is_admin) {
+            basicUser.is_admin = true;
+          }
         }
       } catch (e) {
         // Ignore errors (including timeout), just use basicUser
-        console.log('Could not fetch is_admin, using default');
+        console.log('Could not fetch user data from DB, using Google data');
       }
 
       return basicUser;

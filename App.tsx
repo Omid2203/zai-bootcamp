@@ -3,15 +3,21 @@ import { Header } from './components/Header';
 import { ProfileCard } from './components/ProfileCard';
 import { CommentSection } from './components/CommentSection';
 import { AdminProfileEditor } from './components/AdminProfileEditor';
-import { Profile, User, Comment, ViewState } from './types';
+import { TouchPointSection } from './components/TouchPointSection';
+import { Profile, User, Comment, ViewState, TouchPoint } from './types';
 import { authService } from './services/authService';
 import { profileService } from './services/profileService';
 import { commentService } from './services/commentService';
+import { touchPointService } from './services/touchPointService';
 import { ChevronRight, LayoutGrid, Plus, FileText, GraduationCap, Briefcase, Calendar, Mail, Phone } from 'lucide-react';
+import { getAvatarUrl } from './utils/avatar';
+import { Button } from './components/ui/button';
+import { Badge } from './components/ui/badge';
+import { Avatar, AvatarImage } from './components/ui/avatar';
 
 export default function App() {
-  // Check if returning from OAuth (token in URL hash)
-  const initialHasToken = typeof window !== 'undefined' && window.location.hash.includes('access_token');
+  // Check if returning from OAuth (token/code in URL)
+  const hasOAuthParams = authService.hasOAuthParams();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [view, setView] = useState<ViewState>('LOGIN');
@@ -19,12 +25,16 @@ export default function App() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(initialHasToken);
-  const [loadingMessage, setLoadingMessage] = useState(initialHasToken ? 'در حال ورود به سیستم...' : '');
+  const [isLoading, setIsLoading] = useState(hasOAuthParams);
+  const [loadingMessage, setLoadingMessage] = useState(hasOAuthParams ? 'در حال ورود به سیستم...' : '');
 
   // Admin States
   const [showAdminEditor, setShowAdminEditor] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+
+  // Touch Points
+  const [latestTouchPoints, setLatestTouchPoints] = useState<Map<string, TouchPoint>>(new Map());
+  const [selectedProfileTouchPoints, setSelectedProfileTouchPoints] = useState<TouchPoint[]>([]);
 
   // Auto-timeout for loading state
   useEffect(() => {
@@ -49,7 +59,7 @@ export default function App() {
 
     const init = async () => {
       try {
-        const hasToken = window.location.hash.includes('access_token');
+        const hasToken = authService.hasOAuthParams();
 
         // If returning from OAuth, process the token manually
         if (hasToken) {
@@ -68,6 +78,10 @@ export default function App() {
             const loadedProfiles = await profileService.getProfiles();
             if (isMounted) {
               setProfiles(loadedProfiles);
+              // Load latest touch points for all profiles
+              const profileIds = loadedProfiles.map(p => p.id);
+              const touchPointsMap = await touchPointService.getLatestTouchPointsForProfiles(profileIds);
+              setLatestTouchPoints(touchPointsMap);
               setIsLoading(false);
               setLoadingMessage('');
             }
@@ -87,6 +101,9 @@ export default function App() {
           const loadedProfiles = await profileService.getProfiles();
           if (isMounted) {
             setProfiles(loadedProfiles);
+            const profileIds = loadedProfiles.map(p => p.id);
+            const touchPointsMap = await touchPointService.getLatestTouchPointsForProfiles(profileIds);
+            setLatestTouchPoints(touchPointsMap);
           }
         }
       } catch (error) {
@@ -117,6 +134,9 @@ export default function App() {
           const loadedProfiles = await profileService.getProfiles();
           if (isMounted) {
             setProfiles(loadedProfiles);
+            const profileIds = loadedProfiles.map(p => p.id);
+            const touchPointsMap = await touchPointService.getLatestTouchPointsForProfiles(profileIds);
+            setLatestTouchPoints(touchPointsMap);
           }
         } catch (e) {
           console.error('Error loading profiles:', e);
@@ -165,8 +185,12 @@ export default function App() {
 
   const handleProfileClick = async (profile: Profile) => {
     setSelectedProfile(profile);
-    const profileComments = await commentService.getComments(profile.id);
+    const [profileComments, profileTouchPoints] = await Promise.all([
+      commentService.getComments(profile.id),
+      touchPointService.getTouchPoints(profile.id)
+    ]);
     setComments(profileComments);
+    setSelectedProfileTouchPoints(profileTouchPoints);
     setView('PROFILE_DETAIL');
   };
 
@@ -179,6 +203,29 @@ export default function App() {
     if (selectedProfile) {
       const profileComments = await commentService.getComments(selectedProfile.id);
       setComments(profileComments);
+    }
+  };
+
+  const refreshTouchPoints = async () => {
+    if (selectedProfile) {
+      const profileTouchPoints = await touchPointService.getTouchPoints(selectedProfile.id);
+      setSelectedProfileTouchPoints(profileTouchPoints);
+      // Also update the latest touch point in the map
+      if (profileTouchPoints.length > 0) {
+        setLatestTouchPoints(prev => new Map(prev).set(selectedProfile.id, profileTouchPoints[0]));
+      }
+    }
+  };
+
+  const handleToggleStatus = async (e: React.MouseEvent, profile: Profile) => {
+    e.stopPropagation();
+    const newStatus = profile.is_active === false ? true : false;
+    const updated = await profileService.toggleProfileStatus(profile.id, newStatus);
+    if (updated) {
+      setProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, is_active: newStatus } : p));
+      if (selectedProfile?.id === profile.id) {
+        setSelectedProfile({ ...selectedProfile, is_active: newStatus });
+      }
     }
   };
 
@@ -234,18 +281,19 @@ export default function App() {
       <div className="h-screen flex flex-col items-center justify-center bg-gray-100">
         <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 max-w-sm">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-700 font-medium">{loadingMessage || 'در حال بارگذاری...'}</p>
-          <p className="text-gray-400 text-sm">لطفاً صبر کنید</p>
-          <button
+          <p className="font-medium">{loadingMessage || 'در حال بارگذاری...'}</p>
+          <p className="text-muted-foreground text-sm">لطفاً صبر کنید</p>
+          <Button
+            variant="link"
             onClick={() => {
               setIsLoading(false);
               setLoadingMessage('');
               window.history.replaceState(null, '', window.location.pathname);
             }}
-            className="mt-4 text-sm text-blue-600 hover:underline"
+            className="mt-4"
           >
             بازگشت به صفحه ورود
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -264,10 +312,11 @@ export default function App() {
             پلتفرم اختصاصی برای مشاهده و مدیریت <br/> پروفایل‌های کارجویان
           </p>
 
-          <button
+          <Button
+            variant="outline"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 hover:shadow-md transition-all font-medium group relative overflow-hidden disabled:opacity-50"
+            className="w-full py-6 text-base gap-3"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -276,7 +325,7 @@ export default function App() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
             <span>{isLoading ? 'در حال ورود...' : 'ورود با گوگل'}</span>
-          </button>
+          </Button>
 
           <p className="mt-8 text-xs text-gray-400">
             با ورود به سیستم، قوانین و مقررات را می‌پذیرید.
@@ -313,13 +362,13 @@ export default function App() {
 
             {/* Admin Add Button */}
             {currentUser?.is_admin && (
-               <button
+               <Button
                  onClick={handleAddNewClick}
-                 className="fixed bottom-6 left-6 z-40 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-2"
+                 className="fixed bottom-6 left-6 z-40 p-6 rounded-full shadow-lg hover:scale-105 transition-transform gap-2"
                >
                  <Plus className="w-6 h-6" />
                  <span className="font-bold hidden sm:inline">افزودن پروفایل</span>
-               </button>
+               </Button>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -331,6 +380,8 @@ export default function App() {
                   isAdmin={currentUser?.is_admin}
                   onEdit={handleEditClick}
                   onDelete={handleDeleteClick}
+                  onToggleStatus={handleToggleStatus}
+                  latestTouchPoint={latestTouchPoints.get(profile.id)}
                 />
               ))}
             </div>
@@ -347,13 +398,14 @@ export default function App() {
         {view === 'PROFILE_DETAIL' && selectedProfile && currentUser && (
           <div className="animate-in slide-in-from-bottom-4 duration-500">
 
-            <button
+            <Button
+              variant="ghost"
               onClick={handleBackToList}
-              className="mb-6 flex items-center text-gray-500 hover:text-blue-600 transition-colors"
+              className="mb-6 gap-1"
             >
               <ChevronRight className="w-5 h-5" />
               بازگشت به لیست
-            </button>
+            </Button>
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               {/* Profile Header */}
@@ -364,12 +416,13 @@ export default function App() {
                  {/* Admin Controls on Detail Page */}
                  {currentUser.is_admin && (
                    <div className="absolute top-4 left-4 z-10 flex gap-2">
-                     <button
+                     <Button
+                       variant="outline"
                        onClick={(e) => handleEditClick(e, selectedProfile)}
-                       className="px-4 py-2 bg-white/20 backdrop-blur text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium flex items-center gap-2"
+                       className="bg-white/20 backdrop-blur text-white border-white/30 hover:bg-white/30 hover:text-white"
                      >
                        ویرایش پروفایل
-                     </button>
+                     </Button>
                    </div>
                  )}
               </div>
@@ -377,11 +430,9 @@ export default function App() {
               <div className="px-8 pb-8 relative">
                 <div className="flex flex-col sm:flex-row gap-6 items-start">
                   <div className="-mt-16 relative">
-                    <img
-                      src={selectedProfile.image_url || 'https://via.placeholder.com/128'}
-                      alt={selectedProfile.name}
-                      className="w-32 h-32 rounded-2xl object-cover border-4 border-white shadow-md"
-                    />
+                    <Avatar className="w-32 h-32 rounded-2xl border-4 border-white shadow-md">
+                      <AvatarImage src={getAvatarUrl(selectedProfile.name)} alt={selectedProfile.name} />
+                    </Avatar>
                   </div>
 
                   <div className="pt-4 flex-1">
@@ -424,9 +475,9 @@ export default function App() {
                     {/* Skills */}
                     <div className="flex flex-wrap gap-2">
                        {selectedProfile.skills.map(skill => (
-                         <span key={skill} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm">
+                         <Badge key={skill} variant="secondary">
                            {skill}
-                         </span>
+                         </Badge>
                        ))}
                     </div>
                   </div>
@@ -435,15 +486,16 @@ export default function App() {
                 {/* Resume Link */}
                 {selectedProfile.resume_link && (
                   <div className="mt-6">
-                    <a
-                      href={selectedProfile.resume_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-                    >
-                      <FileText className="w-4 h-4" />
-                      مشاهده رزومه
-                    </a>
+                    <Button asChild>
+                      <a
+                        href={selectedProfile.resume_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <FileText className="w-4 h-4 ml-2" />
+                        مشاهده رزومه
+                      </a>
+                    </Button>
                   </div>
                 )}
 
@@ -466,6 +518,15 @@ export default function App() {
                     </p>
                   </div>
                 )}
+
+                {/* Touch Points Section */}
+                <TouchPointSection
+                  profileId={selectedProfile.id}
+                  profileName={selectedProfile.name}
+                  touchPoints={selectedProfileTouchPoints}
+                  currentUser={currentUser}
+                  onTouchPointAdded={refreshTouchPoints}
+                />
 
                 {/* Comments */}
                 <CommentSection

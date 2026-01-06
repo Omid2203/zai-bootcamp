@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Profile } from '../types';
-import { X, Save, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
+import { Save, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
+import { Button } from './ui/button';
 
 interface AdminProfileEditorProps {
   profile?: Profile | null;
@@ -40,7 +45,6 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
@@ -56,7 +60,6 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
     try {
       let imageUrl = formData.image_url || '';
 
-      // Upload image if a new file is selected
       if (selectedFile) {
         const tempId = profile?.id || `temp-${Date.now()}`;
         const uploadedUrl = await storageService.uploadProfileImage(selectedFile, tempId);
@@ -81,14 +84,12 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
         image_url: imageUrl,
       };
 
-      // Only include id if editing existing profile
       if (profile?.id) {
         profileData.id = profile.id;
       }
 
       await onSave(profileData as Profile);
     } catch (err) {
-      // Error is already shown in profileService
       console.error('Error saving profile:', err);
     } finally {
       setSaving(false);
@@ -96,124 +97,118 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-gray-900">
-            {profile ? 'ویرایش پروفایل' : 'افزودن پروفایل جدید'}
-          </h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{profile ? 'ویرایش پروفایل' : 'افزودن پروفایل جدید'}</DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">نام و نام خانوادگی *</label>
-            <input
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">نام و نام خانوادگی *</Label>
+            <Input
+              id="name"
               required
               type="text"
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ایمیل</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">ایمیل</Label>
+              <Input
+                id="email"
                 type="email"
                 dir="ltr"
                 placeholder="example@email.com"
                 value={formData.email || ''}
                 onChange={e => setFormData({...formData, email: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">شماره همراه</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="phone">شماره همراه</Label>
+              <Input
+                id="phone"
                 type="tel"
                 dir="ltr"
                 placeholder="09123456789"
                 value={formData.phone || ''}
                 onChange={e => setFormData({...formData, phone: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">سن</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="age">سن</Label>
+              <Input
+                id="age"
                 type="number"
                 min="1"
                 max="100"
                 value={formData.age || ''}
                 onChange={e => setFormData({...formData, age: e.target.value ? parseInt(e.target.value) : undefined})}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">تحصیلات</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="education">تحصیلات</Label>
+              <Input
+                id="education"
                 type="text"
                 placeholder="کارشناسی کامپیوتر"
                 value={formData.education || ''}
                 onChange={e => setFormData({...formData, education: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">تخصص</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="expertise">تخصص</Label>
+            <Input
+              id="expertise"
               type="text"
               placeholder="توسعه‌دهنده فرانت‌اند"
               value={formData.expertise || ''}
               onChange={e => setFormData({...formData, expertise: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">لینک رزومه</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="resume">لینک رزومه</Label>
+            <Input
+              id="resume"
               type="url"
               dir="ltr"
               placeholder="https://..."
               value={formData.resume_link || ''}
               onChange={e => setFormData({...formData, resume_link: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-mono"
+              className="font-mono"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">تصویر پروفایل</label>
+          <div className="space-y-2">
+            <Label>تصویر پروفایل</Label>
             <div className="flex items-start gap-4">
-              {/* Preview */}
               <div className="flex-shrink-0">
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Preview" className="w-24 h-24 rounded-xl object-cover border-2 border-gray-200" />
+                  <img src={previewUrl} alt="Preview" className="w-24 h-24 rounded-xl object-cover border-2" />
                 ) : (
-                  <div className="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center border-2 border-gray-200">
-                    <ImageIcon className="w-10 h-10 text-gray-400" />
+                  <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center border-2">
+                    <ImageIcon className="w-10 h-10 text-muted-foreground" />
                   </div>
                 )}
               </div>
 
-              {/* Upload Button */}
               <div className="flex-1">
                 <label className="cursor-pointer block">
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-blue-500 hover:bg-blue-50/50 transition-colors">
+                  <div className="border-2 border-dashed rounded-xl p-4 hover:border-primary hover:bg-accent/50 transition-colors">
                     <div className="flex flex-col items-center gap-2 text-center">
-                      <Upload className="w-6 h-6 text-gray-400" />
-                      <div className="text-sm text-gray-600">
-                        <span className="text-blue-600 font-medium">انتخاب تصویر</span>
-                        <p className="text-xs text-gray-500 mt-1">PNG, JPG (حداکثر 5MB)</p>
+                      <Upload className="w-6 h-6 text-muted-foreground" />
+                      <div className="text-sm">
+                        <span className="text-primary font-medium">انتخاب تصویر</span>
+                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG (حداکثر 5MB)</p>
                       </div>
                     </div>
                   </div>
@@ -231,57 +226,67 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">مهارت‌ها (با کاما جدا کنید)</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="skills">مهارت‌ها (با کاما جدا کنید)</Label>
+            <Input
+              id="skills"
               type="text"
               value={skillsInput}
               placeholder="React, Python, Design..."
               onChange={e => setSkillsInput(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">درباره</label>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="bio">درباره</Label>
+            <Textarea
+              id="bio"
               rows={3}
               value={formData.bio || ''}
               onChange={e => setFormData({...formData, bio: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">نظر مصاحبه‌کننده</label>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="opinion">نظر مصاحبه‌کننده</Label>
+            <Textarea
+              id="opinion"
               rows={3}
               placeholder="نظر شما درباره این فرد..."
               value={formData.interviewer_opinion || ''}
               onChange={e => setFormData({...formData, interviewer_opinion: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          <div className="pt-4 flex gap-3">
-            <button
+          <div className="flex gap-3 pt-4">
+            <Button
               type="button"
+              variant="outline"
               onClick={onCancel}
-              className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+              className="flex-1"
             >
               انصراف
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+              className="flex-1"
             >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              {saving ? 'در حال ذخیره...' : 'ذخیره'}
-            </button>
+              {saving ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin ml-2" />
+                  در حال ذخیره...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5 ml-2" />
+                  ذخیره
+                </>
+              )}
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
