@@ -18,8 +18,41 @@ const hasOAuthParams = (): boolean => {
   return params.has('code');
 };
 
+// Get the OAuth code from URL
+const getOAuthCode = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('code');
+};
+
 export const authService = {
   hasOAuthParams,
+
+  // Explicitly exchange OAuth code for session - call this when code is in URL
+  processOAuthCallback: async (): Promise<boolean> => {
+    const code = getOAuthCode();
+    if (!code) return false;
+
+    try {
+      console.log('Processing OAuth callback with code...');
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error) {
+        console.error('Error exchanging code for session:', error);
+        return false;
+      }
+
+      console.log('Successfully exchanged code for session:', data.user?.email);
+
+      // Clean up URL after successful exchange
+      window.history.replaceState(null, '', window.location.pathname);
+
+      return true;
+    } catch (error) {
+      console.error('Exception in processOAuthCallback:', error);
+      return false;
+    }
+  },
 
   signInWithGoogle: async (): Promise<void> => {
     const redirectTo = `${window.location.origin}${window.location.pathname}`;

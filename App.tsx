@@ -54,18 +54,13 @@ export default function App() {
     return () => clearTimeout(timeout);
   }, [isLoading]);
 
-  // Initialize App - Supabase SDK handles OAuth callback automatically
+  // Initialize App
   useEffect(() => {
     let isMounted = true;
 
     // Listen for auth changes
     const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
       if (!isMounted) return;
-
-      // Clear OAuth params from URL after processing
-      if (window.location.search.includes('code=') || window.location.hash) {
-        window.history.replaceState(null, '', window.location.pathname);
-      }
 
       if (user) {
         setCurrentUser(user);
@@ -96,8 +91,18 @@ export default function App() {
       }
     });
 
-    // Trigger session check - this also processes OAuth code if present in URL
-    authService.getCurrentUser();
+    // Initialize auth - process OAuth callback if code is in URL
+    const initAuth = async () => {
+      if (authService.hasOAuthParams()) {
+        // Explicitly exchange code for session - this handles case where existing session prevents auto-detection
+        await authService.processOAuthCallback();
+      } else {
+        // Just check current session
+        authService.getCurrentUser();
+      }
+    };
+
+    initAuth();
 
     return () => {
       isMounted = false;
