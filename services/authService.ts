@@ -18,54 +18,8 @@ const hasOAuthParams = (): boolean => {
   return params.has('code');
 };
 
-// Remove OAuth params from URL once we've processed them
-const clearOAuthParams = () => {
-  if (typeof window === 'undefined') return;
-  if (window.location.hash || window.location.search) {
-    window.history.replaceState(null, '', window.location.pathname);
-  }
-};
-
 export const authService = {
   hasOAuthParams,
-
-  // Process OAuth callback from URL (PKCE flow)
-  processOAuthCallback: async (): Promise<User | null> => {
-    if (!hasOAuthParams()) return null;
-
-    try {
-      console.log('Processing OAuth callback from URL...');
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-
-      if (!code) {
-        console.log('No code found in URL');
-        clearOAuthParams();
-        return null;
-      }
-
-      // Exchange code for session (PKCE flow)
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-      if (error) {
-        console.error('Error exchanging code for session:', error);
-        clearOAuthParams();
-        return null;
-      }
-
-      clearOAuthParams();
-
-      if (data.session?.user) {
-        return authService.getCurrentUser();
-      }
-
-      return null;
-    } catch (e) {
-      console.error('Error processing OAuth callback:', e);
-      clearOAuthParams();
-      return null;
-    }
-  },
 
   signInWithGoogle: async (): Promise<void> => {
     const redirectTo = `${window.location.origin}${window.location.pathname}`;

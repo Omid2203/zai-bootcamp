@@ -54,81 +54,22 @@ export default function App() {
     return () => clearTimeout(timeout);
   }, [isLoading]);
 
-  // Initialize App
+  // Initialize App - Supabase SDK handles OAuth callback automatically
   useEffect(() => {
     let isMounted = true;
 
-    const init = async () => {
-      try {
-        const hasToken = authService.hasOAuthParams();
-
-        // If returning from OAuth, process the token manually
-        if (hasToken) {
-          setIsLoading(true);
-          setLoadingMessage('در حال ورود به سیستم...');
-
-          console.log('Found OAuth token in URL, processing...');
-          const user = await authService.processOAuthCallback();
-
-          if (user && isMounted) {
-            console.log('OAuth login successful:', user.email);
-            setCurrentUser(user);
-            setView('LIST');
-            setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
-
-            const loadedProfiles = await profileService.getProfiles();
-            if (isMounted) {
-              setProfiles(loadedProfiles);
-              // Load latest touch points for all profiles
-              const profileIds = loadedProfiles.map(p => p.id);
-              const touchPointsMap = await touchPointService.getLatestTouchPointsForProfiles(profileIds);
-              setLatestTouchPoints(touchPointsMap);
-              setIsLoading(false);
-              setLoadingMessage('');
-            }
-            return;
-          } else {
-            console.log('OAuth processing failed, falling back to getSession');
-          }
-        }
-
-        // Check existing session
-        const user = await authService.getCurrentUser();
-
-        if (user && isMounted) {
-          setCurrentUser(user);
-          setView('LIST');
-          setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
-          const loadedProfiles = await profileService.getProfiles();
-          if (isMounted) {
-            setProfiles(loadedProfiles);
-            const profileIds = loadedProfiles.map(p => p.id);
-            const touchPointsMap = await touchPointService.getLatestTouchPointsForProfiles(profileIds);
-            setLatestTouchPoints(touchPointsMap);
-          }
-        }
-      } catch (error) {
-        console.error('Init error:', error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-          setLoadingMessage('');
-        }
-      }
-    };
-
-    // Listen for auth changes
+    // Listen for auth changes - this handles OAuth callback automatically
     const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
       if (!isMounted) return;
+
+      // Clear OAuth params from URL after processing
+      if (window.location.search.includes('code=') || window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
 
       if (user) {
         setCurrentUser(user);
         setView('LIST');
-
-        // Clear hash from URL
-        if (window.location.hash) {
-          window.history.replaceState(null, '', window.location.pathname);
-        }
 
         try {
           setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
@@ -154,8 +95,6 @@ export default function App() {
         setLoadingMessage('');
       }
     });
-
-    init();
 
     return () => {
       isMounted = false;
