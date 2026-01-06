@@ -58,7 +58,7 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    // Listen for auth changes - this handles OAuth callback automatically
+    // Listen for auth changes
     const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
       if (!isMounted) return;
 
@@ -95,6 +95,9 @@ export default function App() {
         setLoadingMessage('');
       }
     });
+
+    // Trigger session check - this also processes OAuth code if present in URL
+    authService.getCurrentUser();
 
     return () => {
       isMounted = false;
