@@ -47,7 +47,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             <Switch
               checked={isActive}
               onCheckedChange={() => {}}
-              className="h-4 w-7"
+              className="h-4 w-7 data-[state=checked]:bg-primary"
             />
           </div>
           <Button
