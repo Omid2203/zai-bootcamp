@@ -63,7 +63,7 @@ export const TouchPointSection: React.FC<TouchPointSectionProps> = ({
   return (
     <div className="mt-8">
       <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-5 h-5 text-blue-600" />
+        <Clock className="w-5 h-5 text-foreground" />
         <h3 className="font-bold text-lg">آخرین وضعیت</h3>
       </div>
 

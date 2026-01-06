@@ -279,9 +279,9 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-100">
-        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 max-w-sm">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="h-screen flex flex-col items-center justify-center bg-muted">
+        <div className="bg-card rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 max-w-sm">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p className="font-medium">{loadingMessage || 'در حال بارگذاری...'}</p>
           <p className="text-muted-foreground text-sm">لطفاً صبر کنید</p>
           <Button
@@ -357,10 +357,10 @@ export default function App() {
         {/* LIST VIEW */}
         {view === 'LIST' && (
           <div className="animate-in fade-in duration-500 relative">
-            <div className="flex items-center gap-2 mb-6 text-gray-700">
-              <LayoutGrid className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center gap-2 mb-6 text-foreground">
+              <LayoutGrid className="w-5 h-5 text-foreground" />
               <h2 className="text-xl font-bold">لیست پروفایل‌ها</h2>
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full mr-auto">
+              <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full mr-auto">
                 {filteredProfiles.length} نفر
               </span>
             </div>
@@ -412,11 +412,11 @@ export default function App() {
               بازگشت به لیست
             </Button>
 
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
               {/* Profile Header */}
-              <div className="h-48 bg-blue-600 relative">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
-                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-10 -mb-10"></div>
+              <div className="h-48 bg-muted relative">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-background opacity-10 rounded-full -mr-10 -mt-10"></div>
+                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-background opacity-10 rounded-full -ml-10 -mb-10"></div>
 
                  {/* Admin Controls on Detail Page */}
                  {currentUser.is_admin && (
@@ -441,37 +441,37 @@ export default function App() {
                   </div>
 
                   <div className="pt-4 flex-1">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-4">{selectedProfile.name}</h1>
+                    <h1 className="text-3xl font-bold text-foreground mb-4">{selectedProfile.name}</h1>
 
                     {/* Info Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                       {selectedProfile.age && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="w-4 h-4 text-blue-500" />
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
                           <span>{selectedProfile.age} سال</span>
                         </div>
                       )}
                       {selectedProfile.education && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <GraduationCap className="w-4 h-4 text-green-500" />
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <GraduationCap className="w-4 h-4 text-muted-foreground" />
                           <span>{selectedProfile.education}</span>
                         </div>
                       )}
                       {selectedProfile.expertise && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Briefcase className="w-4 h-4 text-purple-500" />
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Briefcase className="w-4 h-4 text-muted-foreground" />
                           <span>{selectedProfile.expertise}</span>
                         </div>
                       )}
                       {selectedProfile.email && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Mail className="w-4 h-4 text-red-500" />
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="w-4 h-4 text-muted-foreground" />
                           <span dir="ltr">{selectedProfile.email}</span>
                         </div>
                       )}
                       {selectedProfile.phone && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Phone className="w-4 h-4 text-teal-500" />
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="w-4 h-4 text-muted-foreground" />
                           <span dir="ltr">{selectedProfile.phone}</span>
                         </div>
                       )}
@@ -507,8 +507,8 @@ export default function App() {
                 {/* Bio */}
                 {selectedProfile.bio && (
                   <div className="mt-8">
-                    <h3 className="font-bold text-gray-900 text-lg mb-3">درباره</h3>
-                    <p className="text-gray-600 leading-7 bg-gray-50 p-4 rounded-xl">
+                    <h3 className="font-bold text-foreground text-lg mb-3">درباره</h3>
+                    <p className="text-muted-foreground leading-7 bg-muted/50 p-4 rounded-xl">
                       {selectedProfile.bio}
                     </p>
                   </div>
@@ -517,8 +517,8 @@ export default function App() {
                 {/* Interviewer Opinion */}
                 {selectedProfile.interviewer_opinion && (
                   <div className="mt-8">
-                    <h3 className="font-bold text-gray-900 text-lg mb-3">نظر مصاحبه‌کننده</h3>
-                    <p className="text-gray-600 leading-7 bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                    <h3 className="font-bold text-foreground text-lg mb-3">نظر مصاحبه‌کننده</h3>
+                    <p className="text-muted-foreground leading-7 bg-muted/50 p-4 rounded-xl">
                       {selectedProfile.interviewer_opinion}
                     </p>
                   </div>

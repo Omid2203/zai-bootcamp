@@ -42,22 +42,22 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               e.stopPropagation();
               onToggleStatus && onToggleStatus(e, profile);
             }}
-            className="flex items-center gap-1 bg-white/90 backdrop-blur rounded-full shadow-sm border px-2 py-1"
+            className="flex items-center gap-1 bg-card/90 backdrop-blur rounded-full shadow-sm border px-2 py-1"
           >
             <Switch
               checked={isActive}
               onCheckedChange={() => {}}
-              className="h-4 w-7 data-[state=checked]:bg-green-600"
+              className="h-4 w-7"
             />
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={(e) => onEdit && onEdit(e, profile)}
-            className="bg-white/90 backdrop-blur rounded-full shadow-sm border h-8 w-8 hover:bg-blue-50"
+            className="bg-card/90 backdrop-blur rounded-full shadow-sm border h-8 w-8"
             title="ویرایش"
           >
-            <Pencil className="w-4 h-4 text-blue-600" />
+            <Pencil className="w-4 h-4 text-foreground" />
           </Button>
           <Button
             variant="ghost"
@@ -73,14 +73,14 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
       {/* Status Badge */}
       <div className="absolute top-2 right-2 z-10">
-        <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}>
+        <Badge variant={isActive ? "default" : "secondary"}>
           {isActive ? 'فعال' : 'غیرفعال'}
         </Badge>
       </div>
 
-      <div className="h-24 bg-blue-500 relative">
-        <div className="absolute -bottom-10 right-6 p-1 bg-white rounded-full">
-          <Avatar className="w-20 h-20 border-2 border-white">
+      <div className="h-24 bg-muted relative">
+        <div className="absolute -bottom-10 right-6 p-1 bg-card rounded-full">
+          <Avatar className="w-20 h-20 border-2 border-border">
             <AvatarImage src={getAvatarUrl(profile.name)} alt={profile.name} />
           </Avatar>
         </div>
@@ -89,11 +89,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       <div className="pt-12 px-6 pb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors">
+            <h3 className="text-lg font-bold group-hover:text-primary transition-colors">
               {profile.name}
             </h3>
             {profile.expertise && (
-              <Badge variant="outline" className="mt-1 bg-purple-100 text-purple-700 border-purple-200">
+              <Badge variant="secondary" className="mt-1">
                 {profile.expertise}
               </Badge>
             )}
@@ -101,16 +101,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
 
         {/* Info Row */}
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
+        <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
           {profile.age && (
             <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
+              <Calendar className="w-3 h-3 text-muted-foreground" />
               <span>{profile.age} سال</span>
             </div>
           )}
           {profile.education && (
             <div className="flex items-center gap-1">
-              <GraduationCap className="w-3 h-3" />
+              <GraduationCap className="w-3 h-3 text-muted-foreground" />
               <span>{profile.education}</span>
             </div>
           )}
@@ -118,10 +118,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
         {/* Latest Touch Point */}
         {latestTouchPoint && (
-          <div className="mt-3 p-2 bg-amber-50 rounded-lg border border-amber-100">
+          <div className="mt-3 p-2 bg-muted/50 rounded-lg border border-border">
             <div className="flex items-start gap-2">
-              <MessageSquare className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-gray-600 line-clamp-2 leading-5">
+              <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-5">
                 {latestTouchPoint.content}
               </p>
             </div>

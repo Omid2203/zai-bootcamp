@@ -23,11 +23,11 @@ export const Header: React.FC<HeaderProps> = ({
   showSearch
 }) => {
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b shadow-sm">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b shadow-sm">
       <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
 
         <div className="flex items-center gap-2 cursor-pointer" onClick={onHomeClick}>
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-lg">
             Z
           </div>
           <span className="font-bold text-xl hidden sm:block">مدیریت پروفایل</span>

@@ -220,7 +220,7 @@ export const AdminProfileEditor: React.FC<AdminProfileEditorProps> = ({ profile,
                   />
                 </label>
                 {selectedFile && (
-                  <p className="text-xs text-green-600 mt-2">✓ {selectedFile.name}</p>
+                  <p className="text-xs text-primary mt-2">✓ {selectedFile.name}</p>
                 )}
               </div>
             </div>
