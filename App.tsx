@@ -270,12 +270,32 @@ export default function App() {
     }
   };
 
-  const filteredProfiles = profiles.filter(p =>
-    p.name.includes(searchTerm) ||
-    (p.bio && p.bio.includes(searchTerm)) ||
-    (p.expertise && p.expertise.includes(searchTerm)) ||
-    p.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredProfiles = profiles
+    .filter(p =>
+      p.name.includes(searchTerm) ||
+      (p.bio && p.bio.includes(searchTerm)) ||
+      (p.expertise && p.expertise.includes(searchTerm)) ||
+      p.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      // 1. فعال‌ها اول، غیرفعال‌ها آخر
+      const isActiveA = a.is_active !== false;
+      const isActiveB = b.is_active !== false;
+
+      if (isActiveA !== isActiveB) {
+        return isActiveA ? -1 : 1;
+      }
+
+      // 2. sort بر اساس آخرین touch point (جدیدترین اول)
+      const touchPointA = latestTouchPoints.get(a.id);
+      const touchPointB = latestTouchPoints.get(b.id);
+
+      if (!touchPointA && !touchPointB) return 0;
+      if (!touchPointA) return 1;
+      if (!touchPointB) return -1;
+
+      return new Date(touchPointB.created_at).getTime() - new Date(touchPointA.created_at).getTime();
+    });
 
   if (isLoading) {
     return (
