@@ -51,9 +51,19 @@ Set in `.env.local`:
 ### Path Alias
 `@` maps to project root (configured in vite.config.ts).
 
+## Development Workflow
+
+**IMPORTANT: After completing each task, create a git commit with a descriptive message.**
+
+When a task is completed:
+1. Stage the changes: `git add .`
+2. Commit with a clear message describing what was done
+3. Use the standard commit format with the Claude Code signature
+
 ## Notes
 
 - UI text is in Persian (Farsi)
 - Admin users can create/edit/delete profiles (determined by `is_admin` field in users table)
 - Regular users can view profiles and add comments
 - All data persists in Supabase
+- UI should use shadcn/ui components for consistent, modern design
