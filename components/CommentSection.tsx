@@ -24,6 +24,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const dayName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date);
+    const dateStr = new Intl.DateTimeFormat('fa-IR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+    return `${dayName}، ${dateStr}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -98,7 +109,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-bold text-sm">{comment.author_name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(comment.created_at).toLocaleDateString('fa-IR')}
+                      {formatDateTime(comment.created_at)}
                     </span>
                   </div>
                   <p className="text-sm leading-6">{comment.content}</p>

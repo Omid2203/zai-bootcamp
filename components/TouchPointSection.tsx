@@ -29,13 +29,15 @@ export const TouchPointSection: React.FC<TouchPointSectionProps> = ({
 
   const latestTouchPoint = touchPoints.length > 0 ? touchPoints[0] : null;
 
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fa-IR', {
+    const dayName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date);
+    const dateStr = new Intl.DateTimeFormat('fa-IR', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     }).format(date);
+    return `${dayName}، ${dateStr}`;
   };
 
   const handleSubmit = async () => {
@@ -124,7 +126,7 @@ export const TouchPointSection: React.FC<TouchPointSectionProps> = ({
               <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                 <span>{latestTouchPoint.author_name}</span>
                 <span>-</span>
-                <span>{formatDate(latestTouchPoint.created_at)}</span>
+                <span>{formatDateTime(latestTouchPoint.created_at)}</span>
               </div>
             </div>
           </div>

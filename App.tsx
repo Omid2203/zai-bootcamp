@@ -9,12 +9,19 @@ import { authService } from './services/authService';
 import { profileService } from './services/profileService';
 import { commentService } from './services/commentService';
 import { touchPointService } from './services/touchPointService';
-import { ChevronRight, LayoutGrid, Plus, FileText, GraduationCap, Briefcase, Calendar, Mail, Phone } from 'lucide-react';
+import { ChevronRight, LayoutGrid, Plus, FileText, GraduationCap, Briefcase, Calendar, Mail, Phone, UserCircle } from 'lucide-react';
 import { getAvatarUrl } from './utils/avatar';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
 import { Avatar, AvatarImage } from './components/ui/avatar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './components/ui/dialog';
+
+// لیست منتورها
+const MENTORS = [
+  { id: 'mentor-1', name: 'پارسا عبداللهی', email: 'parsa@example.com' },
+  { id: 'mentor-2', name: 'نگار پورشعبان', email: 'negar@example.com' }
+];
 
 export default function App() {
   // Check if returning from OAuth (token/code in URL)
@@ -28,6 +35,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(hasOAuthParams);
   const [loadingMessage, setLoadingMessage] = useState(hasOAuthParams ? 'در حال ورود به سیستم...' : '');
+  const [showMentorDialog, setShowMentorDialog] = useState(false);
 
   // Admin States
   const [showAdminEditor, setShowAdminEditor] = useState(false);
@@ -119,6 +127,41 @@ export default function App() {
     } catch (e) {
       console.error(e);
       alert('خطا در احراز هویت با گوگل');
+      setIsLoading(false);
+      setLoadingMessage('');
+    }
+  };
+
+  const handleMentorLogin = async (mentorId: string) => {
+    const mentor = MENTORS.find(m => m.id === mentorId);
+    if (!mentor) return;
+
+    setShowMentorDialog(false);
+    setIsLoading(true);
+    setLoadingMessage('در حال ورود به سیستم...');
+
+    // Create fake user for mentor
+    const mentorUser: User = {
+      id: mentor.id,
+      email: mentor.email,
+      name: mentor.name,
+      avatar_url: getAvatarUrl(mentor.name),
+      is_admin: false
+    };
+
+    setCurrentUser(mentorUser);
+    setView('LIST');
+
+    try {
+      setLoadingMessage('در حال بارگذاری پروفایل‌ها...');
+      const loadedProfiles = await profileService.getProfiles();
+      setProfiles(loadedProfiles);
+      const profileIds = loadedProfiles.map(p => p.id);
+      const touchPointsMap = await touchPointService.getLatestTouchPointsForProfiles(profileIds);
+      setLatestTouchPoints(touchPointsMap);
+    } catch (e) {
+      console.error('Error loading profiles:', e);
+    } finally {
       setIsLoading(false);
       setLoadingMessage('');
     }
@@ -296,6 +339,25 @@ export default function App() {
               </svg>
               <span>{isLoading ? 'در حال ورود...' : 'ورود با گوگل'}</span>
             </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">یا</span>
+              </div>
+            </div>
+
+            <Button
+              variant="secondary"
+              onClick={() => setShowMentorDialog(true)}
+              disabled={isLoading}
+              className="w-full h-11 gap-3"
+            >
+              <UserCircle className="w-5 h-5" />
+              <span>ورود به عنوان منتور</span>
+            </Button>
           </CardContent>
           <CardFooter className="flex-col">
             <p className="text-xs text-muted-foreground text-center">
@@ -303,6 +365,36 @@ export default function App() {
             </p>
           </CardFooter>
         </Card>
+
+        {/* Mentor Selection Dialog */}
+        <Dialog open={showMentorDialog} onOpenChange={setShowMentorDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>انتخاب منتور</DialogTitle>
+              <DialogDescription>
+                لطفاً از لیست زیر انتخاب کنید که به عنوان چه کسی وارد شوید.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {MENTORS.map(mentor => (
+                <Button
+                  key={mentor.id}
+                  variant="outline"
+                  onClick={() => handleMentorLogin(mentor.id)}
+                  className="w-full h-16 justify-start gap-3 text-lg"
+                >
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={getAvatarUrl(mentor.name)} alt={mentor.name} />
+                  </Avatar>
+                  <div className="text-right">
+                    <p className="font-semibold">{mentor.name}</p>
+                    <p className="text-xs text-muted-foreground" dir="ltr">{mentor.email}</p>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

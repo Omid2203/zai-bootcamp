@@ -16,15 +16,17 @@ export const TouchPointModal: React.FC<TouchPointModalProps> = ({
   profileName,
   onClose
 }) => {
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fa-IR', {
+    const dayName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(date);
+    const dateStr = new Intl.DateTimeFormat('fa-IR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
+    return `${dayName}، ${dateStr}`;
   };
 
   return (
@@ -75,7 +77,7 @@ export const TouchPointModal: React.FC<TouchPointModalProps> = ({
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mr-auto">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{formatDate(tp.created_at)}</span>
+                        <span>{formatDateTime(tp.created_at)}</span>
                       </div>
                     </div>
                     <p className="leading-7 whitespace-pre-wrap">
