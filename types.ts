@@ -9,7 +9,7 @@ export interface User {
 export interface Comment {
   id: string;
   profile_id: string;
-  author_id: string;
+  author_id: string | null;
   author_name: string;
   author_avatar?: string;
   content: string;
@@ -37,7 +37,7 @@ export interface Profile {
 export interface TouchPoint {
   id: string;
   profile_id: string;
-  author_id: string;
+  author_id: string | null;
   author_name: string;
   author_avatar?: string;
   content: string;

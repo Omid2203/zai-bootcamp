@@ -45,9 +45,11 @@ export const TouchPointSection: React.FC<TouchPointSectionProps> = ({
 
     setIsSubmitting(true);
     try {
+      // Use null for author_id if this is a fake mentor user (id starts with 'mentor-')
+      const isMentor = currentUser.id.startsWith('mentor-');
       await touchPointService.addTouchPoint({
         profile_id: profileId,
-        author_id: currentUser.id,
+        author_id: isMentor ? null : currentUser.id,
         author_name: currentUser.name || currentUser.email,
         author_avatar: currentUser.avatar_url,
         content: content.trim()
