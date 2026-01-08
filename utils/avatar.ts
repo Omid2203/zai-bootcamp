@@ -9,6 +9,7 @@ const participantPhotos: Record<string, string> = {
   'میلاد حسینی': '/picture/participants/milad.jpeg',
   'محمد حسن کریمی': '/picture/participants/hosein karimi.jpeg',
   'پرهام زیلوچیان': '/picture/participants/parham.jpeg',
+  'پارسا ستوده': '/picture/participants/WhatsApp Image 2026-01-08 at 3.03.35 PM.jpeg',
 };
 
 // Persian female names (common first names)
