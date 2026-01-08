@@ -19,8 +19,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 // لیست منتورها
 const MENTORS = [
-  { id: 'mentor-1', name: 'پارسا عبداللهی', email: 'parsa@example.com' },
-  { id: 'mentor-2', name: 'نگار پورشعبان', email: 'negar@example.com' }
+  { id: 'mentor-1', name: 'پارسا عبداللهی', email: 'parsa@example.com', avatar: '/picture/mentors/پارسا عبدالهی.jpg' },
+  { id: 'mentor-2', name: 'نگار پورشعبان', email: 'negar@example.com', avatar: '/picture/mentors/negar pourshaban.png' }
 ];
 
 export default function App() {
@@ -145,7 +145,7 @@ export default function App() {
       id: mentor.id,
       email: mentor.email,
       name: mentor.name,
-      avatar_url: getAvatarUrl(mentor.name),
+      avatar_url: mentor.avatar,
       is_admin: false
     };
 
@@ -384,7 +384,7 @@ export default function App() {
                   className="w-full h-auto py-3 justify-start gap-3"
                 >
                   <Avatar className="w-10 h-10">
-                    <AvatarImage src={getAvatarUrl(mentor.name)} alt={mentor.name} />
+                    <AvatarImage src={mentor.avatar} alt={mentor.name} />
                   </Avatar>
                   <p className="font-semibold text-base">{mentor.name}</p>
                 </Button>
