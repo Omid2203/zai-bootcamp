@@ -20,7 +20,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 // لیست منتورها
 const MENTORS = [
   { id: 'mentor-1', name: 'پارسا عبداللهی', email: 'parsa@example.com', avatar: '/picture/mentors/پارسا عبدالهی.jpg' },
-  { id: 'mentor-2', name: 'نگار پورشعبان', email: 'negar@example.com', avatar: '/picture/mentors/negar pourshaban.png' }
+  { id: 'mentor-2', name: 'نگار پورشعبان', email: 'negar@example.com', avatar: '/picture/mentors/negar pourshaban.png' },
+  { id: 'mentor-3', name: 'محمد امین اسماعیلی', email: 'amin@example.com', avatar: '/picture/mentors/mohamamd amin esmaeili.png' },
+  { id: 'mentor-4', name: 'حسین تقی زاده', email: 'hossein@example.com', avatar: '/picture/mentors/حسین تقی زاده.jpg' },
+  { id: 'mentor-5', name: 'امیرحسین معین', email: 'amirhossein@example.com', avatar: '/picture/mentors/امیرحسین معین.jpg' },
+  { id: 'mentor-6', name: 'رضا موسوی', email: 'reza@example.com', avatar: '/picture/mentors/رضا موسوی.jpg' }
 ];
 
 export default function App() {
