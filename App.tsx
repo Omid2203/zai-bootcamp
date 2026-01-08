@@ -381,15 +381,12 @@ export default function App() {
                   key={mentor.id}
                   variant="outline"
                   onClick={() => handleMentorLogin(mentor.id)}
-                  className="w-full h-16 justify-start gap-3 text-lg"
+                  className="w-full h-auto py-3 justify-start gap-3"
                 >
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={getAvatarUrl(mentor.name)} alt={mentor.name} />
                   </Avatar>
-                  <div className="text-right">
-                    <p className="font-semibold">{mentor.name}</p>
-                    <p className="text-xs text-muted-foreground" dir="ltr">{mentor.email}</p>
-                  </div>
+                  <p className="font-semibold text-base">{mentor.name}</p>
                 </Button>
               ))}
             </div>
@@ -567,7 +564,7 @@ export default function App() {
                 {selectedProfile.bio && (
                   <div className="mt-8">
                     <h3 className="font-bold text-foreground text-lg mb-3">درباره</h3>
-                    <p className="text-muted-foreground leading-7 bg-muted/50 p-4 rounded-xl">
+                    <p className="text-muted-foreground leading-7 bg-muted/50 p-4 rounded-xl whitespace-pre-wrap">
                       {selectedProfile.bio}
                     </p>
                   </div>
@@ -577,7 +574,7 @@ export default function App() {
                 {selectedProfile.interviewer_opinion && (
                   <div className="mt-8">
                     <h3 className="font-bold text-foreground text-lg mb-3">نظر مصاحبه‌کننده</h3>
-                    <p className="text-muted-foreground leading-7 bg-muted/50 p-4 rounded-xl">
+                    <p className="text-muted-foreground leading-7 bg-muted/50 p-4 rounded-xl whitespace-pre-wrap">
                       {selectedProfile.interviewer_opinion}
                     </p>
                   </div>

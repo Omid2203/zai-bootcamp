@@ -114,7 +114,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       {formatDateTime(comment.created_at)}
                     </span>
                   </div>
-                  <p className="text-sm leading-6">{comment.content}</p>
+                  <p className="text-sm leading-6 whitespace-pre-wrap">{comment.content}</p>
                 </div>
               </div>
             </Card>

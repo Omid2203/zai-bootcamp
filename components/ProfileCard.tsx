@@ -122,7 +122,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           <div className="mt-3 p-2 bg-muted/50 rounded-lg border border-border">
             <div className="flex items-start gap-2">
               <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-5">
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-5 whitespace-pre-wrap">
                 {latestTouchPoint.content}
               </p>
             </div>
