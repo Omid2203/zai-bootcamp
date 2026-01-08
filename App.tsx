@@ -24,7 +24,13 @@ const MENTORS = [
   { id: 'mentor-3', name: 'محمد امین اسماعیلی', email: 'amin@example.com', avatar: '/picture/mentors/mohamamd amin esmaeili.png' },
   { id: 'mentor-4', name: 'حسین تقی زاده', email: 'hossein@example.com', avatar: '/picture/mentors/حسین تقی زاده.jpg' },
   { id: 'mentor-5', name: 'امیرحسین معین', email: 'amirhossein@example.com', avatar: '/picture/mentors/امیرحسین معین.jpg' },
-  { id: 'mentor-6', name: 'رضا موسوی', email: 'reza@example.com', avatar: '/picture/mentors/رضا موسوی.jpg' }
+  { id: 'mentor-6', name: 'رضا موسوی', email: 'reza@example.com', avatar: '/picture/mentors/رضا موسوی.jpg' },
+  { id: 'mentor-7', name: 'امید طیبی', email: 'omid@example.com', avatar: '/picture/mentors/امید طیبی.jpg' },
+  { id: 'mentor-8', name: 'سعید حیدری', email: 'saeed@example.com', avatar: '/picture/mentors/سعید حیدری.png' },
+  { id: 'mentor-9', name: 'شایان مهردوست', email: 'shayan@example.com', avatar: '/picture/mentors/شایان مهردوست.jpg' },
+  { id: 'mentor-10', name: 'محمد جواد ابوطالبی', email: 'javad@example.com', avatar: '/picture/mentors/محمد جواد ابوطالبی.jpg' },
+  { id: 'mentor-11', name: 'محمدرضا خسروی', email: 'mohammadreza@example.com', avatar: '/picture/mentors/محمدرضا خسروی.jpg' },
+  { id: 'mentor-12', name: 'کوروش سلیمانی', email: 'kourosh@example.com', avatar: '/picture/mentors/کوروش سلیمانی.jpg' }
 ];
 
 export default function App() {
@@ -373,9 +379,9 @@ export default function App() {
         {/* Mentor Selection Dialog */}
         <Dialog open={showMentorDialog} onOpenChange={setShowMentorDialog}>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>انتخاب منتور</DialogTitle>
-              <DialogDescription>
+            <DialogHeader className="text-right">
+              <DialogTitle className="text-right">انتخاب منتور</DialogTitle>
+              <DialogDescription className="text-right">
                 لطفاً از لیست زیر انتخاب کنید که به عنوان چه کسی وارد شوید.
               </DialogDescription>
             </DialogHeader>
