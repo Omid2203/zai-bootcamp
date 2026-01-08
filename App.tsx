@@ -378,14 +378,14 @@ export default function App() {
 
         {/* Mentor Selection Dialog */}
         <Dialog open={showMentorDialog} onOpenChange={setShowMentorDialog}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[80vh]">
             <DialogHeader className="text-right">
               <DialogTitle className="text-right">انتخاب منتور</DialogTitle>
               <DialogDescription className="text-right">
                 لطفاً از لیست زیر انتخاب کنید که به عنوان چه کسی وارد شوید.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-3 mt-4">
+            <div className="space-y-3 mt-4 max-h-[400px] overflow-y-auto px-1">
               {MENTORS.map(mentor => (
                 <Button
                   key={mentor.id}
