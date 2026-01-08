@@ -133,9 +133,39 @@ export const authService = {
   onAuthStateChange: (callback: (user: User | null) => void) => {
     return supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
+
       if (session?.user) {
-        const user = await authService.getCurrentUser();
-        callback(user);
+        // Extract user directly from session - don't call getSession() again
+        const authUser = session.user;
+        const basicUser: User = {
+          id: authUser.id,
+          email: authUser.email || '',
+          name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || '',
+          avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '',
+          is_admin: false
+        };
+
+        // Try to enrich from database (short timeout, non-blocking)
+        try {
+          const { data: userData } = await withTimeout(
+            supabase
+              .from('users')
+              .select('name, avatar_url, is_admin')
+              .eq('id', authUser.id)
+              .maybeSingle(),
+            3000
+          );
+          if (userData) {
+            if (userData.name) basicUser.name = userData.name;
+            if (userData.avatar_url) basicUser.avatar_url = userData.avatar_url;
+            if (userData.is_admin) basicUser.is_admin = true;
+          }
+        } catch (e) {
+          // Ignore timeout, use basic user from Google
+          console.log('Could not fetch user data from DB, using Google data');
+        }
+
+        callback(basicUser);
       } else {
         callback(null);
       }

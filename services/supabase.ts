@@ -10,6 +10,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
   auth: {
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: 'sb-bootcamp-auth-token',
   }
 });

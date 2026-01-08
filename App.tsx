@@ -112,12 +112,11 @@ export default function App() {
     // Initialize auth - process OAuth callback if code is in URL
     const initAuth = async () => {
       if (authService.hasOAuthParams()) {
-        // Explicitly exchange code for session - this handles case where existing session prevents auto-detection
+        // Explicitly exchange code for session
         await authService.processOAuthCallback();
-      } else {
-        // Just check current session
-        authService.getCurrentUser();
       }
+      // No need to call getCurrentUser() - onAuthStateChange fires INITIAL_SESSION event
+      // which will trigger the callback with current session state
     };
 
     initAuth();
