@@ -1,3 +1,16 @@
+// Mapping of participant names to their photo files
+const participantPhotos: Record<string, string> = {
+  'امیرحسین شریفی نژاد': '/picture/participants/amirhossein sharif.jpeg',
+  'امید نائیج نژاد': '/picture/participants/omid naeijnejad.jpeg',
+  'علیرضا فیض آبادی فراهانی': '/picture/participants/alireza feyzabadi.jpeg',
+  'امینه علیخانی': '/picture/participants/amine.jpeg',
+  'پارمیس سبکتکین': '/picture/participants/parmis saboktakin.jpeg',
+  'پانته آ سبکتکین': '/picture/participants/pantea saboktakin.jpeg',
+  'میلاد حسینی': '/picture/participants/milad.jpeg',
+  'محمد حسن کریمی': '/picture/participants/hosein karimi.jpeg',
+  'پرهام زیلوچیان': '/picture/participants/parham.jpeg',
+};
+
 // Persian female names (common first names)
 const femaleNames = [
   'نازنین', 'امینه', 'پارمیس', 'پانته', 'پانته‌آ', 'سارا', 'مریم', 'زهرا', 'فاطمه',
@@ -15,8 +28,14 @@ const isFemale = (fullName: string): boolean => {
   return femaleNames.some(name => firstName.includes(name) || name.includes(firstName));
 };
 
-// Get avatar URL based on name and gender (using DiceBear)
+// Get avatar URL - first check for participant photo, then fallback to DiceBear
 export const getAvatarUrl = (name: string): string => {
+  // Check if participant has a real photo
+  if (participantPhotos[name]) {
+    return participantPhotos[name];
+  }
+
+  // Fallback to DiceBear avatar
   const female = isFemale(name);
   const seed = encodeURIComponent(name);
 
